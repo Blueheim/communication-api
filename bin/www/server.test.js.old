@@ -1,0 +1,69 @@
+const ev = require('../../utils/events');
+const logger = require('../../utils/logger');
+const server = require('./server');
+const { createInitSocket, destroySocket, createServerResponse } = require('../../utils/testHelpers');
+
+// Test format in 3 parts:
+//1. unit under test
+//2. Scenario
+//3. Expectation
+describe('1/ Test suite: echo & bello', () => {
+  let clientSocket = null;
+  let serverInstance;
+  let serverAddr;
+
+  beforeEach(async () => {
+    jest.setTimeout(10000);
+    ({ serverInstance, serverSocket } = server(null)); // null port means dynamic port
+    serverAddr = serverInstance.getHandler().address();
+    clientSocket = await createInitSocket(serverAddr.address, serverAddr.port);
+  });
+
+  afterEach(async () => {
+    await serverInstance.close();
+  });
+
+  describe('2/ Test echo and bello', () => {
+    it('3/ should return status 200 and `SERVER ECHO` message', async () => {
+      try {
+        const serverResponse = createServerResponse(clientSocket, ev.TEST_RES_ECHO);
+
+        // define client data
+        const clientData = { message: 'CLIENT ECHO' };
+
+        // emit event with data to server
+        clientSocket.emit(ev.TEST_COM_ECHO, clientData);
+
+        // wait for server to respond
+        const { status, message } = await serverResponse;
+
+        // check the response data
+        expect(status).toBe(200);
+        expect(message).toBe('SERVER ECHO');
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+    it('3/ should return status 200 and `SERVER BELLO` message', async () => {
+      try {
+        // Server response
+        const serverResponse = createServerResponse(clientSocket, ev.TEST_RES_BELLO);
+
+        // define client data
+        const clientData = { message: 'CLIENT BELLO' };
+
+        // emit event with data to server
+        clientSocket.emit(ev.TEST_COM_BELLO, clientData);
+
+        // wait for server to respond
+        const { status, message } = await serverResponse;
+
+        // check the response data
+        expect(status).toBe(200);
+        expect(message).toBe('SERVER BELLO');
+      } catch (err) {
+        logger.error(err);
+      }
+    });
+  });
+});

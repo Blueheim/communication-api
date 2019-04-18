@@ -1,0 +1,22 @@
+{
+  "name": "communication-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --watchAll"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@blueheim/node-utils": "^1.0.4",
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0",
+    "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "jest": "^24.7.1",
+    "socket.io-client": "^2.2.0"
+  }
+}
