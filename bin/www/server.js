@@ -13,9 +13,9 @@ module.exports = port => {
   // if (process.env.NODE_ENV === 'test') {
   //   require('./test-events')(serverSocket);
   // } else {
-  const chatNsp = serverSocket.of('/chat');
-  require('../../chat/chat')(chatNsp);
+  const nsp = serverSocket.of('/chat');
+  require('../../chat/chat')(nsp);
   // }
 
-  return { serverInstance, serverSocket };
+  return { serverInstance, serverNamespace: nsp };
 };

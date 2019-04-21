@@ -2,14 +2,14 @@ const ioClient = require('socket.io-client');
 const ev = require('../utils/events');
 const logger = require('../utils/logger');
 
-const createInitSocket = (adress, port, namespace = '/') => {
+const createInitSocket = (address, port, namespace = '/') => {
+  address = 'localhost';
   return new Promise((resolve, reject) => {
     // Setup
     // Do not hardcode server port and address, square brackets are used for IPv6
-    const clientSocket = ioClient.connect(`http://[${adress}]:${port}${namespace}`, {
-      'reconnection delay': 0,
-      'reopen delay': 0,
-      'force new connection': true,
+    const clientSocket = ioClient.connect(`http://${address}:${port}${namespace}`, {
+      reconnection: true,
+      reconnectionDelay: 0,
       transports: ['websocket'],
     });
 
@@ -50,7 +50,7 @@ const createServerResponse = (clientSocket, eventName) => {
       logger.info('Server says: ' + serverData);
 
       //destroy socket after server responds
-      await destroySocket(clientSocket);
+      //await destroySocket(clientSocket);
 
       // return data to test
       resolve(serverData);

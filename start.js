@@ -1,5 +1,3 @@
 const server = require('./bin/www/server');
 
-const { serverInstance, serverSocket } = server();
-
-console.log(serverSocket);
+const { serverInstance, serverNamespace } = server(5000);

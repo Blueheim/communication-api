@@ -5,7 +5,7 @@ const { createInitSocket, destroySocket, createServerResponse } = require('../ut
 
 let serverInstance;
 let serverAddr;
-let serverSocket;
+let serverNamespace;
 
 // Test format in 3 parts:
 //1. unit under test
@@ -13,23 +13,40 @@ let serverSocket;
 //3. Expectation
 describe('1/ Test suite: events', () => {
   let clientSocket = null;
-  let serverObject = null;
+  let clientSocketMate = null;
 
   beforeAll(async () => {
     jest.setTimeout(10000);
-    ({ serverInstance, serverSocket } = server(null)); // null port means dynamic port
+    ({ serverInstance, serverNamespace } = server(null));
+    // null port means dynamic port
     serverAddr = serverInstance.getHandler().address();
+  });
+
+  beforeEach(async () => {
     clientSocket = await createInitSocket(serverAddr.address, serverAddr.port, '/chat');
+    clientSocketMate = await createInitSocket(serverAddr.address, serverAddr.port, '/chat');
+  });
+
+  afterEach(async () => {
+    //destroy socket after server responds
+    await destroySocket(clientSocket);
+    await destroySocket(clientSocketMate);
   });
 
   afterAll(async () => {
     await serverInstance.close();
   });
 
-  describe('2/ Test chat and room connection', () => {
-    it('3/ should connect to the chat namespace', () => {
+  describe('2/ Test namespace and room connection', () => {
+    it('3/ should connect to the chat namespace', async () => {
       try {
-        const isConnected = !!serverSocket.nsps['/chat'].connected[clientSocket.id];
+        //console.log(serverSocket);
+        let isConnected = false;
+        const name = serverNamespace.name;
+
+        if (name === '/chat') {
+          isConnected = !!serverNamespace.connected[clientSocket.id];
+        }
 
         // check the response data
         expect(isConnected).toBeTruthy();
@@ -37,31 +54,67 @@ describe('1/ Test suite: events', () => {
         logger.error(err);
       }
     });
-    it('3/ should join the `default` room', () => {
+    it('3/ should join a room', async () => {
       try {
-        const hasJoinedRoom = serverSocket.nsps['/chat'].adapter.rooms['default'].sockets[clientSocket.id];
+        const roomName = 'web';
+        const message = 'Join a room';
+        const userName = 'Xavier';
+
+        const serverResponse = createServerResponse(clientSocket, ev.CHAT_USER_JOIN);
+
+        clientSocket.emit(ev.CHAT_JOIN_ROOM, { roomName, message, userName }, () => {});
+
+        const response = await serverResponse;
+
+        // console.log(clientSocket.io.engine.id);
+        // console.log(serverNamespace.adapter.rooms[roomName].sockets);
+
+        const key = `/chat#${clientSocket.io.engine.id}`;
+
+        const hasJoinedRoom = serverNamespace.adapter.rooms[roomName].sockets[key];
 
         // check the response data
         expect(hasJoinedRoom).toBeTruthy();
       } catch (err) {
+        console.log(err);
         logger.error(err);
       }
     });
   });
 
   describe('2/ Test messages', () => {
-    it('3/ chat connection info message', async () => {
-      const clientSocketMate = await createInitSocket(serverAddr.address, serverAddr.port, '/chat');
-      const serverResponse = createServerResponse(clientSocketMate, ev.CHAT_INFO_MESSAGE);
+    const user1 = {
+      userName: 'Xavier',
+      roomName: 'web',
+    };
 
-      const userName = 'Xavier';
-      // emit event with data to server
-      clientSocket.emit(ev.CHAT_NEW_CONNECTION, userName);
+    const user2 = {
+      userName: 'Anna',
+      roomName: 'web',
+    };
+
+    it('3/ chat broadcast message', async () => {
+      clientSocket.emit(
+        ev.CHAT_JOIN_ROOM,
+        { roomName: user1.roomName, message: 'User 1 join', userName: user1.userName },
+        () => {}
+      );
+
+      clientSocketMate.emit(
+        ev.CHAT_JOIN_ROOM,
+        { roomName: user2.roomName, message: 'User 2 join', userName: user2.userName },
+        () => {}
+      );
+
+      const serverResponse = createServerResponse(clientSocketMate, ev.CHAT_MESSAGE);
+
+      clientSocket.emit(ev.CHAT_NEW_BROADCAST_MESSAGE, { text: 'My broadcast message' }, () => {});
+
       // wait for server to respond
-      const { type, message } = await serverResponse;
+      const { text } = await serverResponse;
+
       // check the response data
-      expect(type).toBe('info');
-      expect(message).toBe(`${userName} joined the chat`);
+      expect(text).toBe(`My broadcast message`);
     });
   });
 });
