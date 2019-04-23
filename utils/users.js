@@ -23,8 +23,10 @@ const addUser = ({ id, userName, roomName }) => {
     };
   }
 
+  const status = 'active';
+
   // Store user
-  const user = { id, userName, roomName };
+  const user = { id, userName, roomName, status };
   users.push(user);
   return { user };
 };
@@ -48,9 +50,18 @@ const getUsersInRoom = roomName => {
   return users.filter(user => user.roomName === roomName);
 };
 
+const updateUser = updatedUser => {
+  const index = users.findIndex(user => user.id === updatedUser.id);
+
+  if (index !== -1) {
+    users[index] = updatedUser;
+  }
+};
+
 module.exports = {
   addUser,
   removeUser,
   getUser,
   getUsersInRoom,
+  updateUser,
 };

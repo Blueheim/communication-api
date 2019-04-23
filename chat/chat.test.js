@@ -76,7 +76,6 @@ describe('1/ Test suite: events', () => {
         // check the response data
         expect(hasJoinedRoom).toBeTruthy();
       } catch (err) {
-        console.log(err);
         logger.error(err);
       }
     });
