@@ -12,6 +12,7 @@ module.exports = {
   CHAT_USER_LEFT: 'chat user left',
   CHAT_USER_STATUS: 'chat user status',
   CHAT_ROOM_DATA: 'chat room data',
+  CHAT_USER_TRUST: 'chat user trust',
   TEST_COM_ECHO: '#echo',
   TEST_RES_ECHO: '@echo',
   TEST_COM_BELLO: '#bello',

@@ -3,6 +3,7 @@ const Filter = require('bad-words');
 const ev = require('../utils/events');
 const logger = require('../utils/logger');
 
+const { convertUrlToLink } = require('../utils/string');
 const { addUser, removeUser, getUser, getUsersInRoom, updateUser } = require('../utils/users.js');
 
 module.exports = serverSocket => {
@@ -62,6 +63,8 @@ module.exports = serverSocket => {
         return callback('Profanity is not allowed');
       }
 
+      message.text = convertUrlToLink(message.text);
+
       console.log(user);
       console.log(message);
 
@@ -75,6 +78,26 @@ module.exports = serverSocket => {
 
       if (user.status !== status) {
         user.status = status;
+
+        updateUser(user);
+
+        serverSocket.to(user.roomName).emit(ev.CHAT_ROOM_DATA, {
+          roomName: user.roomName,
+          users: getUsersInRoom(user.roomName),
+        });
+      }
+
+      callback();
+    });
+
+    //ON USER TRUST
+    clientSocket.on(ev.CHAT_USER_TRUST, ({ userId, value }, callback) => {
+      const user = getUser(userId);
+
+      if (user && (user.trustRate + value >= 0 && user.trustRate + value <= 1)) {
+        user.trustRate += value;
+
+        console.log(user);
 
         updateUser(user);
 

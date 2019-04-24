@@ -24,9 +24,10 @@ const addUser = ({ id, userName, roomName }) => {
   }
 
   const status = 'active';
+  const trustRate = 1;
 
   // Store user
-  const user = { id, userName, roomName, status };
+  const user = { id, userName, roomName, status, trustRate };
   users.push(user);
   return { user };
 };
